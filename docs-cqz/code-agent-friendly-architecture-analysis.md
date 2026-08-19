@@ -59,7 +59,8 @@
   `examples/` 三处）。这保证了单一事实来源：规则只维护一份，同时兼容
   Claude Code、Codex 等多种读取不同文件名的 agent 工具，零额外维护成本。
 - 指令加载有显式配置：`DEFAULT_INSTRUCTION_FILE_CANDIDATES = ['AGENTS.md', 'CLAUDE.md']`，
-  可配置字节预算或整体关闭（`packages/examples/acp-demo/src/index.ts`）。
+  可配置字节预算或整体关闭（`packages/context/agent-instructions/src/config.ts`，
+  经 `acp-demo` / `agent-spine-demo` 的 `workspaceContext` 配置转发）。
 
 **核心经验**：指令是代码，不是 wiki。它有作用域、有加载机制、有预算控制，
 还有测试——`agent-core.spec.ts` 中专门有 "must not be injected" 的负例测试，
