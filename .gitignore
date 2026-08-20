@@ -17,7 +17,7 @@ coverage/
 .oxlintrc.contract-*.json
 oxlint-contract-*.ts
 .humanize/
-tmp/
+#tmp/
 .claude/
 .vscode/
 .obsidian/

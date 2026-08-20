@@ -1,0 +1,14 @@
+{
+  "extends": "../../vendor/cordis/tsconfig.json",
+  "compilerOptions": {
+    "composite": false,
+    "declaration": false,
+    "declarationMap": false,
+    "incremental": false,
+    "noEmit": true,
+    "noUnusedLocals": false,
+    "noUnusedParameters": false,
+    "rootDir": "../.."
+  },
+  "include": ["**/*.ts"]
+}
