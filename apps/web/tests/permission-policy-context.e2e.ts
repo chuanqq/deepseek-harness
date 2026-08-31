@@ -136,6 +136,7 @@ describe('web e2e: current sandbox policy reaches the model before tools', () =>
     expect(contexts[0]).toContain('Do not refuse a required modification from this policy alone')
     expect(contexts[0]).toContain('Approval policy: ask.')
     expect(contexts[1]).toContain('Current DSH file policy: danger-full-access. The DSH file sandbox does not restrict file modifications by available operations.')
+    expect(contexts[1]).toContain('This is the widest sandbox mode: a sandbox_permissions request can never be strictly wider than it — do not set sandbox_permissions.')
     expect(contexts[1]).toContain('Approval prompts are disabled in this session')
 
     if (sessionWorkspace === undefined) throw new Error('permission-policy scenario observed no session workspace')

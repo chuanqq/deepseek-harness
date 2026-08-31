@@ -162,7 +162,7 @@ describe('sandbox:policy request context', () => {
     const expected = {
       'read-only': 'Current DSH file policy: read-only. Any available operation enforced by the DSH file sandbox cannot modify files in the standing mode. Do not refuse a required modification from this policy alone: try an available tool normally and follow any denial and escalation guidance it returns.',
       'workspace-write': `Current DSH file policy: workspace-write. Any available operation enforced by the DSH file sandbox may modify files under the session workspace: ${JSON.stringify(workspaceRoot)}. Some platform temporary areas may also be writable.`,
-      'danger-full-access': 'Current DSH file policy: danger-full-access. The DSH file sandbox does not restrict file modifications by available operations.',
+      'danger-full-access': 'Current DSH file policy: danger-full-access. The DSH file sandbox does not restrict file modifications by available operations. This is the widest sandbox mode: a sandbox_permissions request can never be strictly wider than it — do not set sandbox_permissions.',
     } as const
 
     expect(await policyContext(ctx, session(`sess-${mode}`, '/projects/../projects/current'))).toBe(expected[mode])
@@ -196,7 +196,7 @@ describe('sandbox:policy request context', () => {
 
     setSandboxMode(active, 'danger-full-access')
     const danger = await policyContext(ctx, active)
-    expect(danger).toBe('Current DSH file policy: danger-full-access. The DSH file sandbox does not restrict file modifications by available operations.')
+    expect(danger).toBe('Current DSH file policy: danger-full-access. The DSH file sandbox does not restrict file modifications by available operations. This is the widest sandbox mode: a sandbox_permissions request can never be strictly wider than it — do not set sandbox_permissions.')
     expect(await policyContext(ctx, active)).toBe(danger)
 
     setSandboxMode(active, 'workspace-write')

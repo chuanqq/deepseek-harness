@@ -85,9 +85,11 @@ describe('approveEscalation', () => {
     const seen: unknown[] = []
     const spy = ingredients({ approver: approver('allowed-once', r => seen.push(r)) })
     await expect(approveEscalation(req({ requestedMode: 'read-only' }), spy))
-      .rejects.toThrow(/not strictly wider than this call's current "read-only" mode/)
+      .rejects.toThrow('sandbox escalation to "read-only" is not strictly wider than this call\'s current "read-only" mode; '
+        + '"read-only" already grants at least "read-only" — resend the same command without sandbox_permissions')
     await expect(approveEscalation(req({ requestedMode: 'workspace-write', effectiveMode: 'danger-full-access' as never }), spy))
-      .rejects.toThrow(/not strictly wider/)
+      .rejects.toThrow('sandbox escalation to "workspace-write" is not strictly wider than this call\'s current "danger-full-access" mode; '
+        + '"danger-full-access" already grants at least "workspace-write" — resend the same command without sandbox_permissions')
     expect(seen).toEqual([])
   })
 

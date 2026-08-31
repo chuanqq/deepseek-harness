@@ -111,7 +111,7 @@ kind: "package-reference"
 
 #### 模型看到什么
 
-每个 agent 会话的当前运行时上下文快照中都有一项 `sandbox:policy` 贡献。它不枚举已挂载的能力。工具插件继续负责操作与升权引导，批准策略单独贡献给同一份快照，计划引导仍由 `dsh-plan-mode` 的系统段落管理。
+每个 agent 会话的当前运行时上下文快照中都有一项 `sandbox:policy` 贡献。它不枚举已挂载的能力。工具插件继续负责逐操作的拒绝与升权引导，批准策略单独贡献给同一份快照，计划引导仍由 `dsh-plan-mode` 的系统段落管理。`danger-full-access` 陈述额外点名升级阶梯的顶端——没有任何 `sandbox_permissions` 请求能严格宽于最宽模式——从而避免 widest 模式下的模型投机填写该字段。
 
 ##### 只读
 
@@ -128,7 +128,7 @@ Current DSH file policy: workspace-write. Any available operation enforced by th
 ##### 完全访问
 
 ```markdown
-Current DSH file policy: danger-full-access. The DSH file sandbox does not restrict file modifications by available operations.
+Current DSH file policy: danger-full-access. The DSH file sandbox does not restrict file modifications by available operations. This is the widest sandbox mode: a sandbox_permissions request can never be strictly wider than it — do not set sandbox_permissions.
 ```
 
 #### Token 影响

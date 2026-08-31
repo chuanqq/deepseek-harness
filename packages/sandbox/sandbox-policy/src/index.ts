@@ -45,7 +45,8 @@ function renderPolicyContext(policy: SandboxExecutionPolicy): string {
     case 'workspace-write':
       return `Current DSH file policy: workspace-write. Any available operation enforced by the DSH file sandbox may modify files under the session workspace: ${JSON.stringify(policy.workspaceRoot)}. Some platform temporary areas may also be writable.`
     case 'danger-full-access':
-      return 'Current DSH file policy: danger-full-access. The DSH file sandbox does not restrict file modifications by available operations.'
+      return 'Current DSH file policy: danger-full-access. The DSH file sandbox does not restrict file modifications by available operations. '
+        + 'This is the widest sandbox mode: a sandbox_permissions request can never be strictly wider than it — do not set sandbox_permissions.'
     /* v8 ignore next 4 -- SandboxMode is a typed same-process closed union; this branch is only the static exhaustiveness guard. */
     default: {
       const mode: never = policy.mode

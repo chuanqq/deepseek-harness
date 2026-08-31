@@ -111,7 +111,7 @@ Start with the subsystem reference for the shared vocabulary, then the seam cont
 
 #### What the model sees
 
-One `sandbox:policy` contribution in the current runtime-context snapshot for every agent session. It does not enumerate mounted capabilities. Tool plugins retain operation and escalation guidance, approval policy contributes separately to the same snapshot, and plan guidance remains `dsh-plan-mode`'s system section.
+One `sandbox:policy` contribution in the current runtime-context snapshot for every agent session. It does not enumerate mounted capabilities. Tool plugins retain operation-specific denial and escalation guidance, approval policy contributes separately to the same snapshot, and plan guidance remains `dsh-plan-mode`'s system section. The `danger-full-access` statement additionally names the escalation ceiling — no `sandbox_permissions` request can be strictly wider than the widest mode — so a model on it never fills the field speculatively.
 
 ##### Read-only
 
@@ -128,7 +128,7 @@ Current DSH file policy: workspace-write. Any available operation enforced by th
 ##### Danger-full-access
 
 ```markdown
-Current DSH file policy: danger-full-access. The DSH file sandbox does not restrict file modifications by available operations.
+Current DSH file policy: danger-full-access. The DSH file sandbox does not restrict file modifications by available operations. This is the widest sandbox mode: a sandbox_permissions request can never be strictly wider than it — do not set sandbox_permissions.
 ```
 
 #### Token effect
