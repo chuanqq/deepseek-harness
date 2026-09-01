@@ -14,8 +14,12 @@ vi.mock('@earendil-works/pi-ai/api/openai-completions.lazy', () => ({
 import { PiAiAdapter } from '../src/adapter.ts'
 import { resolveProfiles } from '../src/config.ts'
 import { memoryAuth } from './auth-double.ts'
+import { closeMockServers, mockServer } from './mock-server.ts'
 
-afterEach(() => { streamSimple.mockReset() })
+afterEach(async () => {
+  streamSimple.mockReset()
+  await closeMockServers()
+})
 
 /** A hand-declared OpenAI-compatible route with one fully described model. */
 function gatewayAdapter(): PiAiAdapter {
@@ -41,6 +45,65 @@ async function drain(adapter: PiAiAdapter): Promise<StreamChunk[]> {
   })) chunks.push(chunk)
   return chunks
 }
+
+/**
+ * A hand-declared `anthropic-messages` route pointed at the mock endpoint. The
+ * real protocol implementation serves it, so the recorded request body is the
+ * wire evidence for what the session options put there.
+ */
+function anthropicAdapter(baseURL: string, profile: Record<string, unknown>): PiAiAdapter {
+  return new PiAiAdapter({
+    profiles: () => resolveProfiles({
+      'acme-anthropic': {
+        api: 'anthropic-messages',
+        baseURL,
+        models: [{ id: 'acme-model', contextWindow: 8192, maxTokens: 1024 }],
+        ...profile,
+      },
+    }),
+    resolveApiKey: () => Promise.resolve('test-key'),
+    auth: memoryAuth(),
+  })
+}
+
+/** One request through that route; the mock answers an empty stream, which finishes as an error. */
+async function requestBody(profile: Record<string, unknown>, sessionId?: string): Promise<Record<string, unknown>> {
+  const server = await mockServer([{ events: [] }])
+  const adapter = anthropicAdapter(server.url, profile)
+  for await (const _chunk of adapter.stream({
+    provider: 'acme-anthropic',
+    model: 'acme-model',
+    messages: [],
+    ...sessionId === undefined ? {} : { sessionId: sessionId as never },
+  })) { /* the body is recorded before the first chunk; the outcome is not this test's subject */ }
+  return server.requests[0] as Record<string, unknown>
+}
+
+describe('conversation identity on an anthropic-messages route', () => {
+  it('names the session in metadata.user_id when the route asks for it', async () => {
+    expect(await requestBody({ sendSessionUserId: true }, 'session-abc'))
+      .toMatchObject({ metadata: { user_id: 'session_session-abc' } })
+  })
+
+  it('sends no metadata by default, so the session id stays inside the harness', async () => {
+    expect(await requestBody({}, 'session-abc')).not.toHaveProperty('metadata')
+  })
+
+  it('sends no metadata for a request carrying no session, however the route is configured', async () => {
+    expect(await requestBody({ sendSessionUserId: true })).not.toHaveProperty('metadata')
+  })
+
+  it('refuses the switch on a route no model of which speaks the protocol that carries it', () => {
+    expect(() => resolveProfiles({
+      'acme-gateway': {
+        api: 'openai-completions',
+        baseURL: 'http://127.0.0.1:9/v1',
+        models: [{ id: 'local-model', contextWindow: 8192, maxTokens: 1024 }],
+        sendSessionUserId: true,
+      },
+    })).toThrow(/sendSessionUserId.*anthropic-messages.*metadata\.user_id/s)
+  })
+})
 
 describe('pi-ai SDK retry boundary', () => {
   it('pins one SDK attempt even when the installed provider currently defaults to zero retries', async () => {

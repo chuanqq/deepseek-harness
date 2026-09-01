@@ -84,9 +84,14 @@ Each profile may set a `retryPolicy`; omission uses normal mode with five retrie
 | `requestImagePixelBudget` | `4,194,304` | Total-pixel budget for each deterministic request image |
 | `requestImageMaxBytes` | `1 MiB` | Encoded-byte target for each request image before base64 expansion |
 | `maxRequestImageBytes` | `20 MiB` | Aggregate base64 image-payload bound with oldest-first offload |
+| `sendSessionUserId` | `false` | Names the conversation to an `anthropic-messages` endpoint as `metadata.user_id` |
 | `retryPolicy` | normal, 5 retries | Provider-owned retry policy executed by `dsh-llm-retry` |
 
 The generated [configuration catalog](../../../docs/config-catalog.md#deepseek-aidsh-llm-pi-ai) is the exhaustive source for every accepted field and its JSDoc.
+
+### Name the conversation to a gateway
+
+A gateway in front of an Anthropic-compatible endpoint may bind each conversation to one upstream account and reject a request that names none — the failure is a `400` from the gateway, and no request header answers it. Setting `sendSessionUserId: true` on that route sends the session as `metadata.user_id`, spelled `session_` plus the harness session id, which is the token such gateways match. It stays off by default because it discloses the session id to the endpoint, and it is refused on a route no model of which speaks `anthropic-messages`, the only protocol whose request carries the field. A request the loop stamped with no session sends nothing either way.
 
 ### Sign in to a provider
 

@@ -132,6 +132,40 @@ function profileOptions(
 }
 
 /**
+ * Wire token a gateway matches to recognize that a request names its
+ * conversation. Claude Code spells its own `metadata.user_id` with a
+ * `session_<id>` member, and gateways in front of an Anthropic-compatible
+ * endpoint look for exactly that token, so the harness session id travels
+ * behind it and stays otherwise opaque.
+ */
+const SESSION_USER_ID_PREFIX = 'session_'
+
+/**
+ * The session vocabulary one request carries.
+ *
+ * pi-ai's own `sessionId` is provider-neutral: a route supporting session-based
+ * caching or affinity reads it and every other ignores it, so it always
+ * travels. `metadata.user_id` goes only where the route asked for it, because
+ * it discloses the session id to the endpoint — and it is the only session
+ * marker some Anthropic-compatible gateways accept, a request header being no
+ * substitute.
+ * @param profile - the resolved route profile.
+ * @param sessionId - session identity the loop stamped, when the request carries one.
+ * @returns the session options this request adds to pi-ai's vocabulary.
+ */
+function sessionOptions(
+  profile: ResolvedPiAiProviderProfile,
+  sessionId: GenerateOptions['sessionId'],
+): Pick<SimpleStreamOptions, 'sessionId' | 'metadata'> {
+  if (sessionId === undefined) return {}
+  const id = String(sessionId)
+  return {
+    sessionId: id,
+    ...profile.sendSessionUserId === true ? { metadata: { user_id: `${SESSION_USER_ID_PREFIX}${id}` } } : {},
+  }
+}
+
+/**
  * The profile default this exact model can actually take, for DESCRIBING it.
  * A configured level the model does not support yields none rather than
  * throwing: `resolveModel` builds the model catalog, and a catalog that fails
@@ -376,7 +410,7 @@ export class PiAiAdapter extends LlmAdapter {
         ...profileOptions(profile, reasoning, apiKey),
         ...options.temperature === undefined ? {} : { temperature: options.temperature },
         ...options.maxTokens === undefined ? {} : { maxTokens: options.maxTokens },
-        ...options.sessionId === undefined ? {} : { sessionId: String(options.sessionId) },
+        ...sessionOptions(profile, options.sessionId),
         signal: watchdog.signal,
         // Profile headers are deployment-owned; attribution names are
         // Harness-owned and therefore win collisions.

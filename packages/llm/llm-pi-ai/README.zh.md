@@ -84,9 +84,14 @@ kind: "package-reference"
 | `requestImagePixelBudget` | `4,194,304` | 每张确定性请求图片的总像素预算 |
 | `requestImageMaxBytes` | `1 MiB` | 每张请求图片在 base64 扩展前的编码字节目标 |
 | `maxRequestImageBytes` | `20 MiB` | 带最旧优先卸载的 base64 图片载荷总上限 |
+| `sendSessionUserId` | `false` | 以 `metadata.user_id` 向 `anthropic-messages` 端点声明本次会话 |
 | `retryPolicy` | normal，5 次重试 | 由 `dsh-llm-retry` 执行的提供方自有重试策略 |
 
 生成的[配置目录](../../../docs/config-catalog.zh.md#deepseek-aidsh-llm-pi-ai)是每个受支持字段及其 JSDoc 的穷尽式真源。
+
+### 向网关声明会话
+
+Anthropic 兼容端点之前的网关可能把每个会话绑定到一个上游账号，并拒绝不声明会话的请求——失败表现为网关返回的 `400`，任何请求头都无法满足它。在该路由上设置 `sendSessionUserId: true` 会以 `metadata.user_id` 发送会话，拼写为 `session_` 加 harness 会话 id，正是这类网关匹配的 token。它默认关闭，因为这会把会话 id 透给端点；当路由上没有任何模型使用 `anthropic-messages`——唯一在请求中携带该字段的协议——时它会被拒绝。循环未标记会话的请求无论如何配置都不发送该字段。
 
 ### 登录提供方
 

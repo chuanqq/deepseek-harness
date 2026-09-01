@@ -253,6 +253,13 @@ const RESPONSES_COMPAT_GATE = {
   supportsExplicitPromptCacheMode: 'withhold',
 } as const satisfies Record<keyof OpenAIResponsesCompat, CompatDisposition>
 
+/**
+ * The one wire protocol whose request body carries `metadata.user_id`. pi-ai
+ * reads that field only on `anthropic-messages`, so a route wanting to name its
+ * conversation there must serve a model speaking it.
+ */
+export const USER_ID_METADATA_API = 'anthropic-messages'
+
 /** Disposition of every `AnthropicMessagesCompat` field; a drift gate like the one above. */
 const ANTHROPIC_COMPAT_GATE = {
   supportsEagerToolInputStreaming: 'offer',

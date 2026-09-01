@@ -29,6 +29,7 @@ import {
   resolveRouteModels,
   SUPPORTED_THINKING_FORMATS,
   THINKING_LEVELS,
+  USER_ID_METADATA_API,
 } from './catalog.ts'
 import type {
   PiAiCompatProfile,
@@ -146,6 +147,19 @@ export interface PiAiProviderProfile {
   defaultInput?: PiAiModality[]
   /** Provider request headers; Harness attribution wins reserved names. */
   headers?: Record<string, string>
+  /**
+   * Whether a request names its conversation to the endpoint through the
+   * Anthropic `metadata.user_id` field, which only `anthropic-messages`
+   * carries — a route no model of which speaks it is refused rather than left
+   * looking configured.
+   *
+   * Off by default because it discloses the harness session id to the
+   * endpoint, which nothing else this adapter sends does. A gateway that binds
+   * each conversation to one upstream account needs it: without a session
+   * marker such a gateway rejects the request outright, and no request header
+   * substitutes for the body field.
+   */
+  sendSessionUserId?: boolean
   /** Provider-neutral pi-ai reasoning level. */
   reasoning?: ModelThinkingLevel
   /** Token budgets used by reasoning providers that support them. */
@@ -323,6 +337,7 @@ const profile = z.object({
   defaultMaxTokens: z.number().step(1).min(1).default(DEFAULT_MAX_TOKENS),
   defaultInput: z.array(z.union(MODALITIES)).default([...DEFAULT_INPUT]),
   headers: z.dict(z.string()),
+  sendSessionUserId: z.boolean(),
   reasoning: z.union(THINKING_LEVELS),
   thinkingBudgets,
   cacheRetention: z.union(['none', 'short', 'long']),
@@ -445,6 +460,15 @@ export function resolveProfiles(
       defaultMaxTokens: source.defaultMaxTokens ?? DEFAULT_MAX_TOKENS,
     })
     const { apiKeyEnv, retryPolicy, models: _models, displayName: _displayName, ...rest } = source
+    // Refused rather than dropped, on the same ground as an unreadable compat
+    // switch: a route whose models speak no protocol carrying `metadata.user_id`
+    // would send nothing while reading as though it named its conversation.
+    if (source.sendSessionUserId === true && !catalog.models.some(model => model.api === USER_ID_METADATA_API)) {
+      throw new Error(
+        `llm-pi-ai: provider "${provider}" sets sendSessionUserId, but no model on the route speaks`
+        + ` ${USER_ID_METADATA_API}, the only protocol whose request carries metadata.user_id`,
+      )
+    }
     resolved.set(provider, {
       ...rest,
       provider,
